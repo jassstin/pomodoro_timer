@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <title>Pomodoro Timer</title>
+  <link rel="stylesheet" href="style.css" />
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+
+</head>
+
+<body class="bg-light">
+
+  <div class="container py-5">
+    <div class="row justify-content-center">
+
+      <div class="col-md-6 px-0"> <!-- Timer -->
+
+        <div class="card shadow-lg rounded-4">
+          <div class="card-body text-center">
+
+            <h2 class="mb-4">Pomodoro Timer</h2>
+
+            <!-- Phase + State -->
+            <p id="phase" class="fw-bold mb-1">Phase: Work</p>
+            <p id="state" class="text-muted">State: Idle</p>
+
+            <!-- Timer Display -->
+            <h1 id="timer-display" class="display-3 my-4">25:00</h1>
+
+            <!-- Buttons -->
+            <div class="d-flex justify-content-center gap-2 mb-2 flex-wrap">
+              <button id="start-btn" class="btn btn-success">Start</button>
+              <button id="pause-btn" class="btn btn-warning">Pause</button>
+              <button id="reset-btn" class="btn btn-danger">Reset</button>
+              <button id="next-btn" class="btn btn-secondary">Next</button>
+            </div>
+
+            <!-- Adjustment buttons -->
+            <div class="d-flex justify-content-center gap-2 mb-3">
+              <button id="plus-btn" class="btn btn-info">Plus</button>
+              <button id="minus-btn" class="btn btn-info">Minus</button>
+            </div>
+
+            <!-- Rounds -->
+            <p id="rounds" class="fw-semibold">Rounds: 0</p>
+
+            <hr class="my-4">
+
+            <!-- Settings Section -->
+            <h5 class="mb-3">Timer Settings (Minutes)</h5>
+
+            <div class="row g-3">
+
+              <div class="col-4">
+                <label class="form-label">Work</label>
+                <input type="number" id="work-input" class="form-control text-center" min="1" value="25">
+              </div>
+
+              <div class="col-4">
+                <label class="form-label">Short Rest</label>
+                <input type="number" id="rest-input" class="form-control text-center" min="1" value="5">
+              </div>
+
+              <div class="col-4">
+                <label class="form-label">Long Rest</label>
+                <input type="number" id="long-rest-input" class="form-control text-center" min="1" value="15">
+              </div>
+
+            </div>
+
+            <button id="apply-settings" class="btn btn-primary mt-4 w-100">
+              Apply Settings
+            </button>
+
+          </div>
+        </div>
+
+
+      </div>
+      <div class="col-md-6 px-0"> <!-- List -->
+        <div class="card shadow-lg rounded-4 p-4">
+          <h3 class="mb-3">My To-Do List</h3>
+
+          <div class="input-group mb-3">
+            <input type="text" id="todo-input" class="form-control" placeholder="Add new task">
+            <button class="btn btn-primary" id="add-btn">Add</button>
+            <a href="../todolist/todo.html" class="btn btn-secondary" id="add-btn">Main List</a>
+
+          </div>
+
+          <ul class="list-group" id="todo-list"></ul>
+
+        </div>
+      </div>
+    </div>
+
+    <div id="restTimer"></div>
+    <script src="script.js"></script>
+    <script src="../todolist/todo.js"></script>
+    
+</body>
+
+</html>
