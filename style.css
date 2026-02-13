@@ -8,3 +8,12 @@ body {
   font-size: 48px;
   margin: 20px 0;
 }
+
+.breathing {
+    animation: breathe 2s ease-in-out infinite;
+}
+
+@keyframes breathe {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.05); }
+}

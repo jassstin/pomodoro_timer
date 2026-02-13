@@ -1,11 +1,11 @@
 // ---- Constants ----
 
 let config = {
-    WORK_TIME: 3000, // milliseconds
-    REST_TIME: 5000,
-    LONG_REST_TIME: 7 * 1000,
+    WORK_TIME: 25 * 60 * 1000, // milliseconds
+    REST_TIME: 5 * 60 * 1000,
+    LONG_REST_TIME: 7 * 60 * 1000,
     TICK_RATE: 10,
-    ADJUST_TIME: 1000
+    ADJUST_TIME: 30 * 1000
 }
 
 
@@ -16,7 +16,7 @@ let state = "idle"; // idle | running | paused
 let rounds = 0;
 let resetCount = 0;
 let phase = "work"; // work | shortRest | longRest
-
+let startDelayId = null;
 
 
 // ---- DOM Elements ----
@@ -26,10 +26,16 @@ const pauseBtn = document.getElementById("pause-btn");
 const resetBtn = document.getElementById("reset-btn");
 const plusBtn = document.getElementById("plus-btn");
 const minusBtn = document.getElementById("minus-btn");
+const nextBtn = document.getElementById("next-btn");
 const stateDisplay = document.getElementById("state");
 const phaseDisplay = document.getElementById("phase");
 const roundsDisplay = document.getElementById("rounds");
 const restTimer = document.getElementById("restTimer");
+
+const workInput = document.getElementById("work-input");
+const restInput = document.getElementById("rest-input");
+const longRestInput = document.getElementById("long-rest-input");
+const applyBtn = document.getElementById("apply-settings");
 
 function updateDisplay(remainingTime) {
 
@@ -64,30 +70,59 @@ resetBtn.addEventListener("click", () => {
 });
 
 plusBtn.addEventListener("click", () => {
-changeRemainingTime("plus");
+    changeRemainingTime("plus");
 });
 
 minusBtn.addEventListener("click", () => {
-changeRemainingTime("minus");
+    changeRemainingTime("minus");
+});
+
+nextBtn.addEventListener("click", () => {
+    clearInterval(timerId);
+    handlePhaseEnd();
+    
 });
 
 
+applyBtn.addEventListener("click", () => {
+
+    config.WORK_TIME = workInput.value * 60 * 1000;
+    config.REST_TIME = restInput.value * 60 * 1000;
+    config.LONG_REST_TIME = longRestInput.value * 60 * 1000;
+
+    remainingTime = config.WORK_TIME;
+    updateDisplay(remainingTime);
+
+});
+
 function changeRemainingTime(command) {
-if (command === "plus") {
-    remainingTime += config.ADJUST_TIME;
-    updateDisplay(remainingTime);
-}
- else if (command === "minus") {
-    remainingTime -= config.ADJUST_TIME;
-    updateDisplay(remainingTime);
-};
+    if (command === "plus") {
+        remainingTime += config.ADJUST_TIME;
+    } else if (command === "minus") {
+        remainingTime -= config.ADJUST_TIME;
+    }
 
+    if (remainingTime < 0) remainingTime = 0;
+
+    updateDisplay(remainingTime);
+
+    if (remainingTime === 0) {
+        clearInterval(timerId);
+
+
+        // Only advance phase if timer is running
+        if (state === "running") {
+            handlePhaseEnd();
+        }
+    }
 }
 
-function startInterval(tickFn) {
-    clearInterval(timerId);
-    timerId = setInterval(tickFn, config.TICK_RATE);
+
+function startInterval(tickFn) { 
+    clearInterval(timerId); 
+    timerId = setInterval(tickFn, config.TICK_RATE); 
 }
+ 
 
 function tickWorkTimer() {
     remainingTime -= config.TICK_RATE;
@@ -102,20 +137,28 @@ function tickWorkTimer() {
     }
 }
 
+function startWithDelay(tickFn) {
+    clearTimeout(startDelayId);
+    startDelayId = setTimeout(() => {
+        if (state === "running") {
+            startInterval(tickFn);
+        }
+    }, 1000);
+};
 
 
 
 
 function startTimer() {
-
-    
+    if (phase == " ") phase = "work";
     phaseDisplay.textContent = `Phase: ${phase}`;
+
     state = "running";
     stateDisplay.textContent = `State: ${state}`;
-    startInterval(tickWorkTimer); // update every 10ms
+    
+    startWithDelay(tickWorkTimer);
+};
 
-
-}
 
 
 
@@ -130,9 +173,9 @@ function pauseTimer() {
     }
     else if (state === "paused") {
         state = "running";
-        startInterval(tickWorkTimer); // update every 10ms
+        startWithDelay(tickWorkTimer); // update every 10ms
         stateDisplay.textContent = `State: ${state}`;
-    } 
+    }
 };
 
 
@@ -146,7 +189,7 @@ function resetTimer() {
     state = "idle";
     stateDisplay.textContent = `State: ${state}`;
     phase = "";
-    phaseDisplay.textContent = `Phase: ${phase}`;
+    phaseDisplay.textContent = `Phase: ${state}`;
     restTimer.innerHTML = ``;
 
     if (resetCount >= 2) {
@@ -158,30 +201,29 @@ function resetTimer() {
 
 };
 
-
 function handlePhaseEnd() {
     clearInterval(timerId);
-
+    restTimer.innerHTML = ``;
     if (phase === "work") {
         // Work just ended
         rounds++;
         roundsDisplay.textContent = `Rounds: ${rounds}`;
-
         startBreak();
     } else if (phase === "shortRest" || phase === "longRest") {
         // Rest just ended
-        phase = "work";
-        phaseDisplay.textContent = `Phase: ${phase}`;
-        remainingTime = config.WORK_TIME;
-        updateDisplay(remainingTime);
+
         if (rounds >= 4) {
             rounds = 0;
             roundsDisplay.textContent = `Rounds: ${rounds}`;
         };
-
+        phase = "work";
+        phaseDisplay.textContent = `Phase: ${phase}`;
+        remainingTime = config.WORK_TIME;
+        updateDisplay(remainingTime);
         startTimer();
     }
-}
+};
+
 
 
 
@@ -189,19 +231,39 @@ function handlePhaseEnd() {
 
 
 function startBreak() {
-
+    state = "running";
+    stateDisplay.textContent = `State: ${state}`;
     if (rounds < 4) {
         phase = "shortRest";
-        phaseDisplay.textContent = `Phase : ${phase}`;
-        restTimer.innerHTML = `<h1>REST TIME</h1>`;
+        phaseDisplay.textContent = `Phase: ${phase}`;
+restTimer.innerHTML = `
+<div class="card text-center shadow-lg mt-3 border-0 bg-info-subtle breathing">
+    <div class="card-body">
+        <h2 class="text-info">☕ Short Break</h2>
+        <p class="lead mb-0">Relax. Breathe. Reset.</p>
+    </div>
+</div>
+`;
+
+
         remainingTime = config.REST_TIME;
-        startInterval(tickWorkTimer);; // update every 10ms
+        updateDisplay(remainingTime);
+        startWithDelay(tickWorkTimer);; // update every 10ms
     } else {
         phase = "longRest";
         phaseDisplay.textContent = `Phase : ${phase}`;
-        restTimer.innerHTML = `<h1>LONG REST TIME</h1>`;
+        restTimer.innerHTML = `
+<div class="card text-center shadow-lg mt-3 border-0 bg-success-subtle breathing">
+    <div class="card-body">
+        <h2 class="text-success">🌴 Long Break</h2>
+        <p class="lead mb-0">You earned this.</p>
+    </div>
+</div>
+`;
+
         remainingTime = config.LONG_REST_TIME;
-        startInterval(tickWorkTimer); // update every 10ms
+        updateDisplay(remainingTime);
+        startWithDelay(tickWorkTimer); // update every 10ms
 
 
     }
